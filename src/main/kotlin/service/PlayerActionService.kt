@@ -16,27 +16,27 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
      */
 
 
-    fun playCard(card : Card) {
+    fun playCard(card: Card) {
         //Get current game and check if it is currently running
         val game = checkNotNull(rootService.currentGame) { "No game is currently running!" }
         val actPlayer = game.players[game.currentPlayer]
 
-        val cardValid1 = isValidCard1(card)
-        val cardValid2 = isValidCard2(card)
+        val cardValid1 = isValidCard(card)
+        val cardValid2 = isValidCard(card)
         require(cardValid1)
         require(cardValid2)
 
         //add the valid card to center deck 1
         if (cardValid1) {
-            actPlayer.handCard.remove(card)
+            actPlayer.handCards.remove(card)
             game.centerDeck1.add(card)
 
-        //add the valid card to center deck 2
+            //add the valid card to center deck 2
         } else if (cardValid2) {
-            actPlayer.handCard.remove(card)
+            actPlayer.handCards.remove(card)
             game.centerDeck2.add(card)
         } else {
-            IllegalArgumentException("The card is not valid!")
+            throw IllegalArgumentException("The card is not valid!")
         }
     }
 
@@ -52,11 +52,11 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val actPlayer = game.players[game.currentPlayer]
 
         if (actPlayer.drawDeck.isNotEmpty()) {
-            if (actPlayer.handCard.size <= 9) {
+            if (actPlayer.handCards.size <= 9) {
 
                 //Get the top card of the draw stack and add it to the current player's hand
                 val drawnCard = actPlayer.drawDeck.removeFirst()
-                actPlayer.handCard.add(drawnCard)
+                actPlayer.handCards.add(drawnCard)
             } else {
                 throw IllegalArgumentException("The player already has 9 cards in their hand!")
             }
@@ -78,19 +78,19 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
         val game = checkNotNull(rootService.currentGame) { "No game is currently running!" }
         val actPlayer = game.players[game.currentPlayer]
 
-        if (actPlayer.handCard.size >= 8 &&
+        if (actPlayer.handCards.size >= 8 &&
             actPlayer.drawDeck.isNotEmpty()
         ) {
             //Player puts all his hand cards into his own draw pile
 
             //HMMMM not yettttt
-            val putCard = actPlayer.drawDeck.add(actPlayer.handCard)
+            actPlayer.drawDeck.addAll(actPlayer.handCards)
+            actPlayer.drawDeck.shuffled()
+            actPlayer.handCards.clear()
 
-            val totalShuffledCards = putCard.shufflle()
-            actPlayer.handCard.clear()
         }
         repeat(5) {
-            actPlayer.handCard.add(actPlayer.drawDeck.drawCard())
+            actPlayer.handCards.add(actPlayer.drawDeck.removeAt(0))
         }
     }
 
@@ -106,7 +106,7 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
     }
 
     //valid for center deck 1?
-    fun isValidCard1(card: Card): Boolean {
+    private fun isValidCard(card: Card): Boolean {
         //Get current game and check if it is currently running
         val game = checkNotNull(rootService.currentGame) { "No game is currently running!" }
 
@@ -114,42 +114,6 @@ class PlayerActionService(private val rootService: RootService) : AbstractRefres
 
         val cardValues = CardValue.entries
         val topPileCard = game.centerDeck1.first()
-        val topPileCardIndex = cardValues.indexOf(topPileCard.value)
-        val cardIndex = cardValues.indexOf(card.value)
-
-        /**
-         * setOf() : returns a new read-only set with the given elements.
-         */
-
-        // 1 level
-        val oneLevel = setOf(
-            (topPileCardIndex + 1) % cardValues.size, //1 level up
-            (topPileCardIndex - 1) % cardValues.size //1 level down
-        )
-        // 2 levels
-
-        val twoLevels = if (card.suit == topPileCard.suit) {
-            setOf(
-                (topPileCardIndex + 2) % cardValues.size, //2 levels up
-                (topPileCardIndex - 2) % cardValues.size //2 levels down
-            )
-        } else {
-            emptySet()
-        }
-
-        //check if the cardIndex matches a valid move
-        return cardIndex in (oneLevel + twoLevels)
-    }
-
-    //valid for center deck 1?
-    fun isValidCard2(card: Card): Boolean {
-        //Get current game and check if it is currently running
-        val game = checkNotNull(rootService.currentGame) { "No game is currently running!" }
-
-        //val actPlayer = game.players[game.currentPlayer]
-
-        val cardValues = CardValue.entries
-        val topPileCard = game.centerDeck2.first()
         val topPileCardIndex = cardValues.indexOf(topPileCard.value)
         val cardIndex = cardValues.indexOf(card.value)
 

@@ -12,8 +12,8 @@ import gui.Refreshable
  */
 
 class RootService {
-    val gameService = GameService(this)
-    val playerActionService = PlayerActionService(this)
+    private val gameService = GameService(this)
+    private val playerActionService = PlayerActionService(this)
 
     //The currently active game. Can be `null`, if no game has started yet.
     var currentGame: UpAndDownGame? = null

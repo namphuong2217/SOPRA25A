@@ -28,7 +28,7 @@ class PlayerTest {
         val player = Player(playerName, handCard, drawDeck)
 
         assertEquals(playerName, player.namePlayer)
-        assertEquals(handCard, player.handCard)
+        assertEquals(handCard, player.handCards)
         assertEquals(drawDeck, player.drawDeck)
     }
 }
